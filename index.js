@@ -78,6 +78,7 @@ async function run() {
       const updateDoc = { $set: data };
       const result = await aboutCollection.findOneAndUpdate(filter, updateDoc);
       res.json(result);
+      console.log( result)
   })
 
     } finally {
