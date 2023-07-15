@@ -28,19 +28,19 @@ async function run() {
       const postsCollection = database.collection('posts');
       const aboutCollection = database.collection('about');
       
-
-    app.get('/posts', async (req, res) => {
-      const cursor = postsCollection.find({});
-      const data = await cursor.toArray();
-      res.json(data);
-    });
-
-    app.get('/posts/:id', async (req, res) => {
+      
+      app.get('/posts/:id', async (req, res) => {
         const id = req.params.id;
         const query = { _id: ObjectId(id) };
         const data = await postsCollection.findOne(query);
         res.json(data);
-    });
+      });
+  
+      app.get('/posts', async (req, res) => {
+        const cursor = postsCollection.find({});
+        const data = await cursor.toArray();
+        res.json(data);
+      });
 
     app.post('/posts', async (req, res) => {
         const userName = req.body.userName;
@@ -56,13 +56,39 @@ async function run() {
             userPhoto,
             post,
             email,
-            reaction: [],
-            comment: [],
+            reactions: [],
+            comments: [],
             image: imageBuffer
         }
         const result = await postsCollection.insertOne(data);
         res.json(result);
     })
+
+    app.patch("/posts/comments/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc =  { $push: { comments: data } };
+      const result = await postsCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    })
+    app.patch("/posts/reaction/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc =  { $push: { reactions: data } };
+      const result = await postsCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    })
+    app.patch("/posts/reaction/:id/:email", async (req, res) => {
+      const id = req.params.id;
+      const email = req.params.email;
+      const filter = { _id: ObjectId(id), "reactions.user": email};
+      const updateDoc = { $pull: { reactions: { user : email} } };
+      const result = await postsCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    })
+
 
 
     app.get('/about', async (req, res) => {
@@ -79,6 +105,11 @@ async function run() {
       const result = await aboutCollection.findOneAndUpdate(filter, updateDoc);
       res.json(result);
       console.log( result)
+
+
+      app.get('/jobs', async (req, res) => {
+        res.send('Jobs Ok Server')
+      });
   })
 
     } finally {
